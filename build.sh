@@ -1,4 +1,6 @@
-cd cmake-build-debug
-sudo cmake .. -DCMAKE_BUILD_TYPE=Debug
-cd ../
-sudo make
+if [ ! -d build ]; then
+	mkdir build
+fi
+cd build
+cmake ../ -DCMAKE_BUILD_TYPE=Debug
+make -j2
