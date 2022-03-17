@@ -13,7 +13,7 @@
 
 #define STORE_FILE "../store/dumpFile"
 
-
+std::mutex mtx;
 std::string delimiter = ":";
 
 /**
@@ -122,6 +122,7 @@ int SkipList<K, V>::get_random_level() {
 
 template<typename K, typename V>
 int SkipList<K, V>::insert_element(K key, V value) {
+    mtx.lock();
     Node<K, V> *cur = header_;
     //    cur->displayNode();
     // 申请 max_level_ 大小的空间
@@ -167,11 +168,13 @@ int SkipList<K, V>::insert_element(K key, V value) {
         std::cout << "Successfully inserted key : " << key << ", value : " << value << std::endl;
         element_count_++;
     }
+    mtx.unlock();
     return 0;
 }
 
 template<typename K, typename V>
 int SkipList<K, V>::delete_element(K key) {
+    mtx.lock();
     Node<K, V> *cur = this->header_;
     // cur->displayNode();
     std::vector<Node<K, V> *> update(max_level_ + 1);
@@ -202,10 +205,11 @@ int SkipList<K, V>::delete_element(K key) {
 
         std::cout << "Successfully deleted key : " << key << std::endl;
         element_count_--;
+        mtx.unlock();
         return 0;
     } else {
         std::cout << "the key \"" << key << "\" is not exist" << std::endl;
-        //        mtx.unlock();
+        mtx.unlock();
         return -1; // 返回值 -1 说明没有该键值
     }
 }
