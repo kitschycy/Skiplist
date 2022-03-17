@@ -45,13 +45,13 @@ public:
 
     void set_value(const V &value) { value_ = value; };
 
-    std::ostream &dump(std::ostream &os) const {
-        os << "[Node: key=" << key_ << ", value=" << value_ << ", next_count=" << next_.size()
+    friend std::ostream &operator<<(std::ostream &os, const Node<K, V> &node) {
+        os << "[Node: key=" << node.key_ << ", value=" << node.value_ << ", next_count=" << node.next_.size()
            << "]";
         return os;
     }
 
-    void displayNode() { dump(std::cout) << std::endl; };
+//    void displayNode() { dump(std::cout) << std::endl; };
 
 public:
     int node_level_;
@@ -205,6 +205,7 @@ int SkipList<K, V>::delete_element(K key) {
 
         std::cout << "Successfully deleted key : " << key << std::endl;
         element_count_--;
+
         mtx.unlock();
         return 0;
     } else {
@@ -227,7 +228,8 @@ int SkipList<K, V>::search_element(K key) {
     // 该操作后 current->get_key >= key 或者 null
     cur = cur->next_[0];
     if (cur && cur->get_key() == key) {
-        cur->displayNode();
+//        cur->displayNode();
+        std::cout << "find the key \"" << key << "\" value " << cur->get_value() << std::endl;
         return 0;
     } else {
         std::cout << "the key \"" << key << "\"is not exist" << std::endl;
