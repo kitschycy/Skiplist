@@ -6,80 +6,75 @@
 #define TEST_CODE_SKIPLIST_H
 
 #include <iostream>
-#include <fstream>
 #include <stdio.h>
 #include <time.h>
 #include <vector>
 
-#define STORE_FILE "../store/dumpFile"
+using std::endl;
+using std::cout;
 
-
-std::string delimiter = ":";
-
-/**
- * @brief 跳表节点
- *
- * @tparam K
- * @tparam V
- */
 template<typename K, typename V>
-class Node {
-public:
-    Node(int level = 0) : key_(), value_(), node_level_(level) {
-        if (level < 0)
-            throw std::logic_error("level can not be a negative number");
-        next_ = std::vector<Node<K, V> *>(node_level_ + 1, nullptr);
-    };
+struct Node {
+//    Node();
+//    Node(int);
+    void init_node(int, K, V);
 
-    Node(const K &k, const V &v, int level) : key_(k), value_(v), node_level_(level) {
-        if (level < 0)
-            throw std::logic_error("level can not be a negative number");
-        next_ = std::vector<Node<K, V> *>(node_level_ + 1, nullptr);
-    }
-
+//    Node(K k, V v, int);
     ~Node() {};
 
-    const K &get_key() const { return key_; };
+    K get_key() const { return this->key_; };
 
-    const V &get_value() const { return value_; };
+    V get_value() const { return this->value_; };
 
-    void set_value(const V &value) { value_ = value; };
+    void set_value(V value) { this->value_ = value; };
 
-    std::ostream &dump(std::ostream &os) const {
-        os << "[Node: key=" << key_ << ", value=" << value_ << ", next_count=" << next_.size()
-           << "]";
-        return os;
-    }
-
-    void displayNode() { dump(std::cout) << std::endl; };
-
+    void displayNode() { cout << key_ << " , " << value_ << " , " << "sizeof next_[] : " << next_.size() << endl; };
 public:
     int node_level_;
-    std::vector<Node<K, V> *> next_; // next_[i] 指第 i 层 右边的 元素
-
+    // next_[i] 指第 i 层 右边的 元素
+    std::vector<Node<K, V> *> next_;
 private:
     K key_;
     V value_;
 };
 
-/**
- * @brief 跳表
- *
- * @tparam K
- * @tparam V
- */
-template <typename K, typename V>
+//template <typename K, typename V>
+//Node<K, V>::Node(K key, V value, int level) {
+//    this->key_ = key;
+//    this->value_ = value;
+//    this->node_level_ = level;
+//    // 创建大小为 level + 1 的空数组
+//    std::vector<Node<K, V> *> next_;
+////    cout << "next_.capacity() : " << next_.capacity() << endl;
+////    displayNode();
+////    this->next_ = std::vector<Node<K, V> *> next(level + 1);
+//}
+
+template<typename K, typename V>
+void Node<K, V>::init_node(int node_level, K k, V v) {
+    this->key_ = k;
+    this->value_ = v;
+    this->node_level_ = node_level;
+    this->next_.resize(node_level + 1, nullptr);
+}
+
+template<typename K, typename V>
 class SkipList {
 public:
-    SkipList(int);
+    SkipList();
 
     ~SkipList();
 
-    // 增删改查
-    int insert_element(K, V); // 增
-    int delete_element(K);    // 删
-    //    int update_element(K, V, bool); // 改
-    int search_element(K);    // 查
+    bool init_skiplist(int);
+
+    //  创建节点，key value 层数
+    Node<K, V> *create_node(K, V, int);
+
+    //    增删改查
+    int insert_element(K, V);        // 增
+    int delete_element(K);            // 删
+//    int update_element(K, V, bool); // 改
+    bool search_element(K);            // 查
 
     int get_random_level();
 
@@ -87,28 +82,51 @@ public:
 
     void display_list();
 
-    void save_file();
-
-    void load_file();
-
-    void get_key_value_from_string(const std::string &str, std::string *key, std::string *value);
-
 private:
     int max_level_;
     int skip_list_level_;
     int element_count_;
     Node<K, V> *header_;
 
-    std::ofstream file_writer_;
-    std::ifstream file_reader_;
+    //    ofstream _file_writer;
+    //    ifstream _file_reader;
 };
 
+//template <typename K, typename V>
+//SkipList<K, V>::SkipList(int max_level) {
+//    this->max_level_ = max_level;
+//    this->skip_list_level_ = 0;
+//    this->element_count_ = 0;
+//    K k;
+//    V v;
+//    this->header_ = create_node(k, v, max_level);
+//    cout << "SkipList()  header_ :" << header_ << endl;
+//};
+
 template<typename K, typename V>
-SkipList<K, V>::SkipList(int max_level)
-        : max_level_(max_level),
-          skip_list_level_(0),
-          element_count_(0),
-          header_(new Node<K, V>(max_level)) {};
+SkipList<K, V>::SkipList()
+        : max_level_(0), skip_list_level_(0), element_count_(0), header_(nullptr) {}
+
+template<typename K, typename V>
+bool SkipList<K, V>::init_skiplist(int max_level) {
+    if (header_ != NULL) {
+        //re init
+        return false;
+    }
+    this->max_level_ = max_level;
+    srand((unsigned int) time(NULL));
+    header_->init_node(max_level_, "", "");
+    return header_ != NULL;
+}
+
+
+template<typename K, typename V>
+Node<K, V> *SkipList<K, V>::create_node(const K k, const V v, int level) {
+    cout << "---- create_node() ---- " << endl;
+    Node<K, V> *node = new Node<K, V>;
+    node->init_node(level, k, v);
+    return node;
+}
 
 template<typename K, typename V>
 int SkipList<K, V>::get_random_level() {
@@ -122,16 +140,17 @@ int SkipList<K, V>::get_random_level() {
 
 template<typename K, typename V>
 int SkipList<K, V>::insert_element(K key, V value) {
-    Node<K, V> *cur = header_;
-    //    cur->displayNode();
+    Node<K, V> *cur = this->header_;
+//    cur->displayNode();
     // 申请 max_level_ 大小的空间
-    std::vector<Node<K, V> *> update(max_level_ + 1, nullptr);
+    std::vector<Node<K, V> *> update(max_level_ + 1);
+
 
     for (int i = skip_list_level_; i >= 0; --i) {
         while (cur->next_[i] != nullptr && cur->next_[i]->get_key() < key) {
-            cur = cur->next_[i]; //  cur 指向 cur 在第 i 层的 后一个元素
+            cur = cur->next_[i];    //  cur 指向 cur 在第 i 层的 后一个元素
         }
-        update[i] = cur; // update 数组存储当前层最符合要求的节点
+        update[i] = cur;    // update 数组存储当前层最符合要求的节点
     }
 
     //  此时到达第 0 层，cur->next_[0] 指向的是最底层 的下一个节点
@@ -140,10 +159,11 @@ int SkipList<K, V>::insert_element(K key, V value) {
     // 1. 插入元素已经存在
     if (cur != nullptr && cur->get_key() == key) {
         std::cout << "key : " << key << ", exists" << std::endl;
+
         return -1;
     }
 
-    if (cur == nullptr || cur != nullptr && cur->get_key() != key) {
+    if (cur == nullptr && cur->get_key() != key) {
         int random_level = get_random_level();
 
         //  如果高度大于当前跳表层高，需要更新 update 数组
@@ -156,7 +176,7 @@ int SkipList<K, V>::insert_element(K key, V value) {
         }
 
         //  创建新节点，进行插入
-        Node<K, V> *inserted_node = new Node<K, V>(key, value, random_level);
+        Node<K, V> *inserted_node = create_node(key, value, random_level);
 
         //  new_node->next = pre_node->next;
         //  pre_node->next = new_node;
@@ -173,7 +193,7 @@ int SkipList<K, V>::insert_element(K key, V value) {
 template<typename K, typename V>
 int SkipList<K, V>::delete_element(K key) {
     Node<K, V> *cur = this->header_;
-    // cur->displayNode();
+    cur->displayNode();
     std::vector<Node<K, V> *> update(max_level_ + 1);
 
     //  通过这个循环保存下来每层最后一个比目标元素小的元素
@@ -204,32 +224,34 @@ int SkipList<K, V>::delete_element(K key) {
         element_count_--;
         return 0;
     } else {
-        std::cout << "the key \"" << key << "\" is not exist" << std::endl;
-        //        mtx.unlock();
+        std::cout << key << " is not exist, please check your input !\n";
+//        mtx.unlock();
         return -1; // 返回值 -1 说明没有该键值
     }
 }
 
 template<typename K, typename V>
-int SkipList<K, V>::search_element(K key) {
+bool SkipList<K, V>::search_element(K key) {
     Node<K, V> *cur = header_;
-    //    std::vector<Node<K, V> *> update(skip_list_level_ + 1);
+//    std::vector<Node<K, V> *> update(skip_list_level_ + 1);
+
     for (int i = skip_list_level_; i >= 0; --i) {
         while (cur->next_[i] != nullptr && cur->next_[i]->get_key() < key) {
             cur = cur->next_[i];
         }
     }
-
     // 该操作后 current->get_key >= key 或者 null
     cur = cur->next_[0];
-    if (cur && cur->get_key() == key) {
-        cur->displayNode();
-        return 0;
-    } else {
-        std::cout << "the key \"" << key << "\"is not exist" << std::endl;
-        return -1;
+
+    if (cur != nullptr && cur->get_key() == key) {
+        std::cout << "Found key : " << key << ", value " << cur->get_value() << std::endl;
+        return true;
     }
+
+    std::cout << "Not Found Key: " << key << std::endl;
+    return false;
 }
+
 
 template<typename K, typename V>
 void SkipList<K, V>::display_list() {
@@ -259,55 +281,5 @@ SkipList<K, V>::~SkipList<K, V>() {
     header_ = nullptr;
 }
 
-template<typename K, typename V>
-void SkipList<K, V>::save_file() {
-    std::cout << "******* save file *******" << std::endl;
 
-    file_writer_.open(STORE_FILE);
-    if (!file_writer_.is_open()) {
-        std::cout << "cannot open file" << std::endl;
-        return;
-    }
-    Node<K, V> *node = this->header_->next_[0];
-
-    while (node != nullptr) {
-        file_writer_ << node->get_key() << ":" << node->get_value() << "\n";
-//        std::cout << node->get_key() << ":" << node->get_value() << ";\n";
-        node = node->next_[0];
-    }
-
-    file_writer_.flush();
-    file_writer_.close();
-    return;
-}
-
-template<typename K, typename V>
-void SkipList<K, V>::load_file() {
-    file_reader_.open(STORE_FILE);
-    std::cout << "--------- load file ---------" << std::endl;
-    std::string line;
-    std::string *key = new std::string();
-    std::string *value = new std::string();
-    while (getline(file_reader_, line)) {
-        get_key_value_from_string(line, key, value);
-        if (key->empty() || value->empty()) {
-            continue;
-        }
-        insert_element(*key, *value);
-        // log TBD
-    }
-    file_reader_.close();
-}
-
-template<typename K, typename V>
-void SkipList<K, V>::get_key_value_from_string(const std::string &str, std::string *key, std::string *value) {
-    if (str.empty() || str.find(delimiter) == std::string::npos) {
-        return;
-    } else {
-        *key = str.substr(0, str.find(delimiter));
-        *value = str.substr(str.find(delimiter) + 1, str.length());
-    }
-}
-
-
-#endif // TEST_CODE_SKIPLIST_H
+#endif //TEST_CODE_SKIPLIST_H

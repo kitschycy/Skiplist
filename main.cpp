@@ -4,6 +4,15 @@
 
 using std::string;
 
+//void file_print() {
+//    std::ifstream ifs;
+//    ifs.open(STORE_FILE);
+//    string test;
+//    while (getline(ifs, test)) {
+//        std::cout << test << std::endl;
+//    }
+//}
+
 int main() {
     SkipList<std::string, std::string> myskiplist(6);
 
@@ -31,5 +40,9 @@ int main() {
     std::cout << "------- display test -------" << std::endl;
     myskiplist.display_list();
 
+    std::cout << "------- data_save test -------" << std::endl;
+    myskiplist.save_file();
+
+//    file_print();
     return 0;
 }
