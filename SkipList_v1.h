@@ -2,8 +2,6 @@
 // Created by 杨晨雨 on 2022/3/14.
 //
 
-//  Not vector version
-
 #ifndef TEST_CODE_SKIPLIST_H
 #define TEST_CODE_SKIPLIST_H
 
@@ -11,7 +9,7 @@
 #include <fstream>
 #include <stdio.h>
 #include <time.h>
-#include <vector>
+//#include <vector>
 #include <mutex>
 
 #define STORE_FILE "../store/dumpFile"
@@ -31,16 +29,20 @@ public:
     Node(int level = 0) : key_(), value_(), node_level_(level) {
         if (level < 0)
             throw std::logic_error("level can not be a negative number");
-        next_ = std::vector<Node<K, V> *>(node_level_ + 1, nullptr);
+        this->next_ = new Node<K, V> *[level + 1];
+        memset(this->next_, 0, sizeof(Node<K, V> *) * (level + 1));
     };
 
     Node(const K &k, const V &v, int level) : key_(k), value_(v), node_level_(level) {
         if (level < 0)
             throw std::logic_error("level can not be a negative number");
-        next_ = std::vector<Node<K, V> *>(node_level_ + 1, nullptr);
+        this->next_ = new Node<K, V> *[level + 1];
+        memset(this->next_, 0, sizeof(Node<K, V> *) * (level + 1));
     }
 
-    ~Node() {};
+    ~Node() {
+        delete[]next_;
+    };
 
     const K &get_key() const { return key_; };
 
@@ -48,18 +50,16 @@ public:
 
     void set_value(const V &value) { value_ = value; };
 
-    friend std::ostream &operator<<(std::ostream &os, const Node<K, V> &node) {
-        os << "[Node: key=" << node.key_ << ", value=" << node.value_ << ", next_count=" << node.next_.size()
-           << "]";
-        return os;
-    }
-
-//    void displayNode() { dump(std::cout) << std::endl; };
+//    friend std::ostream &operator<<(std::ostream &os, const Node<K, V> &node) {
+//        os << "[Node: key=" << node.key_ << ", value=" << node.value_ << ", next_count=" << node.next_.size()
+//           << "]";
+//        return os;
+//    }
 
 public:
     int node_level_;
-    std::vector<Node<K, V> *> next_; // next_[i] 指第 i 层 右边的 元素
-
+//    std::vector<Node<K, V> *> next_; // next_[i] 指第 i 层 右边的 元素
+    Node<K, V> **next_;
 private:
     K key_;
     V value_;
@@ -129,7 +129,8 @@ int SkipList<K, V>::insert_element(K key, V value) {
     Node<K, V> *cur = header_;
     //    cur->displayNode();
     // 申请 max_level_ 大小的空间
-    std::vector<Node<K, V> *> update(max_level_ + 1, nullptr);
+    Node<K, V> *update[max_level_ + 1];
+    memset(update, 0, sizeof(Node<K, V> *) * (max_level_ + 1));
 
     for (int i = skip_list_level_; i >= 0; --i) {
         while (cur->next_[i] != nullptr && cur->next_[i]->get_key() < key) {
@@ -143,10 +144,10 @@ int SkipList<K, V>::insert_element(K key, V value) {
 
     // 1. 插入元素已经存在
     if (cur != nullptr && cur->get_key() == key) {
-        std::cout << "key : " << key << ", exists" << std::endl;
+//        std::cout << "key : " << key << ", exists" << std::endl;
+        mtx.unlock();
         return -1;
     }
-
     if (cur == nullptr || cur != nullptr && cur->get_key() != key) {
         int random_level = get_random_level();
 
@@ -180,7 +181,8 @@ int SkipList<K, V>::delete_element(K key) {
     mtx.lock();
     Node<K, V> *cur = this->header_;
     // cur->displayNode();
-    std::vector<Node<K, V> *> update(max_level_ + 1);
+    Node<K, V> *update[max_level_ + 1];
+    memset(update, 0, sizeof(Node<K, V> *) * (max_level_ + 1));
 
     //  通过这个循环保存下来每层最后一个比目标元素小的元素
     for (int i = skip_list_level_; i >= 0; --i) {
@@ -213,7 +215,7 @@ int SkipList<K, V>::delete_element(K key) {
         mtx.unlock();
         return 0;
     } else {
-//        std::cout << "the key \"" << key << "\" is not exist" << std::endl;
+        std::cout << "the key is not exist" << std::endl;
         mtx.unlock();
         return -1; // 返回值 -1 说明没有该键值
     }
@@ -222,7 +224,7 @@ int SkipList<K, V>::delete_element(K key) {
 template<typename K, typename V>
 int SkipList<K, V>::search_element(K key) {
     Node<K, V> *cur = header_;
-    //    std::vector<Node<K, V> *> update(skip_list_level_ + 1);
+
     for (int i = skip_list_level_; i >= 0; --i) {
         while (cur->next_[i] != nullptr && cur->next_[i]->get_key() < key) {
             cur = cur->next_[i];
@@ -232,7 +234,6 @@ int SkipList<K, V>::search_element(K key) {
     // 该操作后 current->get_key >= key 或者 null
     cur = cur->next_[0];
     if (cur && cur->get_key() == key) {
-//        cur->displayNode();
         std::cout << "find the key \"" << key << "\" value " << cur->get_value() << std::endl;
         return 0;
     } else {
@@ -257,16 +258,13 @@ void SkipList<K, V>::display_list() {
 
 template<typename K, typename V>
 SkipList<K, V>::~SkipList<K, V>() {
-    if (header_ == nullptr)
-        return;
-    Node<K, V> *p = header_->next_[0];
-    while (p != nullptr) {
-        Node<K, V> *nextptr = p->next_[0];
-        delete p;
-        p = nextptr;
+    if (file_writer_.is_open()) {
+        file_writer_.close();
+    }
+    if (file_reader_.is_open()) {
+        file_reader_.close();
     }
     delete header_;
-    header_ = nullptr;
 }
 
 template<typename K, typename V>

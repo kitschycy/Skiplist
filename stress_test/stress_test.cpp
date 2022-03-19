@@ -4,9 +4,12 @@
 #include <pthread.h>
 #include <time.h>
 #include "../SkipList.h"
+//#include "../SkipList_v1.h"
 
 #define NUM_THREADS 1
 #define TEST_COUNT 100000
+//#define TEST_COUNT 500000
+//#define TEST_COUNT 1000000
 SkipList<int, std::string> skiplist(18);
 
 //  创建插入线程
@@ -22,7 +25,7 @@ void *insertElement(void *threadid) {
         count++;
         skiplist.insert_element(rand() % TEST_COUNT, "a");
     }
-    std::cout << tid << "will exit. " << std::endl;
+//    std::cout << tid << "will exit. " << std::endl;
     pthread_exit(NULL);
 }
 
