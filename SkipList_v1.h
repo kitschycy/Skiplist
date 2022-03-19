@@ -2,6 +2,8 @@
 // Created by 杨晨雨 on 2022/3/14.
 //
 
+//  Not vector version
+
 #ifndef TEST_CODE_SKIPLIST_H
 #define TEST_CODE_SKIPLIST_H
 
@@ -69,7 +71,7 @@ private:
  * @tparam K
  * @tparam V
  */
-template <typename K, typename V>
+template<typename K, typename V>
 class SkipList {
 public:
     SkipList(int);
@@ -141,8 +143,7 @@ int SkipList<K, V>::insert_element(K key, V value) {
 
     // 1. 插入元素已经存在
     if (cur != nullptr && cur->get_key() == key) {
-//        std::cout << "key : " << key << ", exists" << std::endl;
-        mtx.unlock();
+        std::cout << "key : " << key << ", exists" << std::endl;
         return -1;
     }
 
@@ -212,7 +213,7 @@ int SkipList<K, V>::delete_element(K key) {
         mtx.unlock();
         return 0;
     } else {
-        std::cout << "the key is not exist" << std::endl;
+//        std::cout << "the key \"" << key << "\" is not exist" << std::endl;
         mtx.unlock();
         return -1; // 返回值 -1 说明没有该键值
     }
