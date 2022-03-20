@@ -3,5 +3,6 @@ project(SkipList1)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(test_Code main.cpp)
+#add_executable(test_Code main.cpp)
 #add_executable(stress stress_test/stress_test.cpp)
+add_executable(list_stress stress_test/node_test.cpp)

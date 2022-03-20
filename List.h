@@ -1,67 +1,52 @@
 //
 // Created by 杨晨雨 on 2022/3/19.
 //
-
-#include <iostream>
-#include <mutex>
-
-
 #ifndef SKIPLIST1_LIST_H
 #define SKIPLIST1_LIST_H
 
-std::mutex mtx;
+#include <iostream>
 
-template<typename K, typename V>
-class ListNode {
+using std::string;
+
+class Node {
 public:
-    ListNode(K key, V value) : key_(key), value_(value), node_next_(nullptr) {};
+    int key_;
+    std::string value_;
+    Node *next_;
 
-    ~ListNode() {};
+    Node() : key_(0), value_(""), next_(nullptr) {};
 
-    const void get_node_key() const { return this->key_; };
-
-    const void get_node_value() const { return this->value_; };
-
-private:
-    K key_;
-    V value_;
-    ListNode<K, V> *node_next_;
+    Node(int k, string v) : key_(k), value_(v), next_(nullptr) {};
 };
 
-template<typename K, typename V>
 class List {
-public:
-    List() : header_(nullptr) {};
-
-    int insert_node(K k, V v);
-
-    int search_node();
-
-    int delete_node();
-
 private:
-    ListNode<K, V> *header_;
+    Node *head_;
+    int count_;
+public:
+    List() : count_(0) { head_ = new Node(); };
+
+    ~List() { delete head_; };
+
+    void insert(int, string);
 };
 
-template<typename K, typename V>
-int List<K, V>::insert_node(K key, V value) {
-    mtx.lock();
-    ListNode<K, V> *cur = header_;
-    while (cur->node_next_ != nullptr && cur->node_next_->get_node_key() < key) {
-        cur = cur->node_next_;
+void List::insert(int key, string value) {
+    Node *cur = head_;
+    while (cur->next_ != nullptr && cur->next_->key_ < key) {
+        cur = cur->next_;
     }
-    if (cur->get_node_key() != key) {
-        ListNode<K, V> *newNode = ListNode<K, V>(key, value);
-        newNode->next = cur->node_next;
-        cur->node_next_ = newNode;
-        mtx.unlock();
-        return 0;
+    if (cur->next_ != nullptr && cur->next_->key_ == key) {
+        return;
     } else {
-        std::cout << "key " << key << "exsists"
-        mtx.unlock();
-        return 1;
+        Node *tmp = new Node(key, value);
+        tmp->next_ = cur->next_;
+        cur->next_ = tmp;
+        std::cout << "insert key :" << key << std::endl;
     }
 }
+
+
 
 
 #endif //SKIPLIST1_LIST_H
